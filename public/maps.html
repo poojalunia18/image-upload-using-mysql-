@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <script src = "https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+    <!-- <script type = 'text/javascript' src='/js/maps.js'></script> -->
+    <!-- <src script = './routes/maps.js' -->
+  <title>My Google Map</title>
+  <style>
+    #map{
+      height:400px;
+      width:100%;
+    }
+    .imgList{
+      width: 350px;
+      height: 350px;
+      transform: rotate(90deg);
+    }
+  </style>
+</head>
+<body>
+  <h1>My Google Map</h1>
+     <fieldset>
+        <legend>Selecting cities</legend>
+        <p>
+           <label>Select City</label>
+           <select id = "selectcities">
+             <option value = "Fremont">Fremont</option>
+             <option value = "Milpitas">Milpitas</option>
+             <option value = "Sunnyvale">Sunnyvale</option>
+             <option value = "Oakland">Oakland</option>
+             <option value = "Livermore">Livermore</option>
+             <option value = "San Jose">San Jose</option>
+             <option value = "Cupertino">Cupertino</option>
+             <option value = "Mountain House">Mountain House</option>
+             <option value = "Big Sur">Big Sur</option>
+
+           </select>
+
+           <label>Select Type</label>
+           <select id = "selecttypes">
+             <option value = "buliding">building</option>
+             <option value = "tree">tree</option>
+             <option value = "flower">flower</option>
+             <option value = "bridge">bridge</option>
+             <option value = "road">road</option>
+           </select>
+
+           <button type="submit" name="submit" id="submit"> Submit</button>
+        </p>
+     </fieldset>
+  <div id="map"></div>
+
+  <div id="imageList"></div>
+  <script>
+  var markers = [];
+  function clearOverlays() {
+    for (var i = 0; i < markers.length; i++ ) {
+      markers[i].setMap(null);
+      console.log("asda");
+    }
+  }
+  function initMap() {
+      var map = new google.maps.Map(document.getElementById('map'), {
+        zoom: 7,
+         center: {lat: 37.8272, lng: -122.29132}
+      //  mapTypeId: google.maps.MapTypeId.ROADMAP
+      });
+
+
+    $(document).ready(function(){
+    $("#submit").click(function(){
+
+
+      clearOverlays();
+        $("#imageList").empty();
+        var city = $("#selectcities").val();
+        var type = $("#selecttypes").val();
+        $.get("/cityData/"+city+"/typeData/"+type, (function(data){
+          //var i;
+            //  console.log(data);
+
+          for (var i = 0; i < data.dataCity.output.length; i++){
+            //console.log(i);
+            //var position  = new google.maps.LatLng(data[4].lat,data[5].lon);
+            //bounds.extend(position);
+            let lat = data.dataCity.output[i].lat;
+            let lon = data.dataCity.output[i].lon;
+            var num = data.dataCity.output[i].image_id;
+            let title = num.toString();
+
+            // var marker = new google.maps.Marker({
+            //   position: {lat: lat, lng: lon},
+            //   // icon: {
+            //   //   path: google.maps.SymbolPath.CIRCLE,
+            //   //   scale: 10
+            //   // },
+            //   title: title,
+            //   draggable: false,
+            //   map: map
+            // });
+
+            function addMarker(lat,lon) {
+              var marker = new google.maps.Marker({
+                position: {lat: lat, lng: lon},
+                map: map,
+                title:title
+                });
+                markers.push(marker);
+              }
+            addMarker(lat,lon)
+
+            //console.log(marker)
+            map.addListener('click', function(event){
+                addMarker(event.latLng);
+            })
+
+
+
+
+            // handle success
+            var imagepath = data.dataCity.output[i].image;
+            //var sliced = city.substr((0,city.indexOf(' ')+1));
+            var sliced = imagepath.slice((0,7));
+            var imgName = "";
+            if(sliced.substring(sliced.length - 4,sliced.length -3) == '.'){
+              imgName = sliced.split(sliced.length - 4, sliced.length - 1  )
+            }
+
+            $("#imageList").append("<br><img class=imgList src=" +  imgName +  " id=" + title + ">");
+
+          }
+
+
+
+
+      }));
+    })
+  });
+
+
+    }
+
+
+
+
+
+  </script>
+  <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD18DNJohlNtYCofN5AR12KaT4fbnMG5Wg&callback=initMap">
+    </script>
+</body>
+</html>
